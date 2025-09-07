@@ -1,0 +1,8 @@
+.bak/
+*.out
+
+# other temp stuff
+tmp/
+
+# blender temp
+*.blend1
