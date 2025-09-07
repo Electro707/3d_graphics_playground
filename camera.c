@@ -1,4 +1,4 @@
-// ChatGPT
+// partial ChatGPT (only for sdl3 setup), rest is by a human (me!)
 #include <SDL3/SDL.h>
 #include <stdint.h>
 #include <stdio.h>

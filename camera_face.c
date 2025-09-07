@@ -1,4 +1,12 @@
-// ChatGPT
+/* Camera model drawing with hidden line removal (without Z buffer)
+ * electro707
+ *
+ * used chatGPT code during the generation of the SDL3 init stuff (never done it before), everything is done by human (me!)
+ *
+ * Note:
+ *	- all matrix are transposed, so each index increment moves across a column. Thus all math have the matrix transposed, for example
+		x-y-z are in columns rather than rows as seen in OpenGL or other graphics learning materials
+*/
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <stdint.h>
@@ -14,12 +22,14 @@
 
 typedef uint32_t u32;
 
-#define CUBE_VERTEX	8
-#define CUBE_FACE			6
-#define CUBE_EDGE			12
+#define FACE_VERTEX_SIZE	3		// number of vertex per face. Should be 3 for triangulated model
 
-#define FACE_VERTEX_SIZE	3
+// #define KEYBOARD_ROTATION		// un-comment out to allow rotation through keyboard keys
+#define ROTATION_INCREMENT	5		// how many degrees per keyboard rotation
 
+// #define DRAW_FACE				// un-comment to draw face. I haven't worked on this in a while, so may be not functional
+
+// struct for matrix maths
 typedef struct{
 	u32 rows;
 	u32 cols;
@@ -38,7 +48,7 @@ static u32 colorPerOjb[] = {
 	0xFFFFFF
 };
 
-static uint32_t fb[APP_W * APP_H]; // 32-bit ARGB8888
+static u32 fb[APP_W * APP_H]; 	// 32-bit ARGB8888
 
 static inline void putPixel(int x, int y, uint32_t c) {
 	if ((unsigned)x < APP_W && (unsigned)y < APP_H) {
@@ -46,61 +56,20 @@ static inline void putPixel(int x, int y, uint32_t c) {
 	}
 }
 
-float cubePositions[CUBE_VERTEX*4] = {
-	-1, 1, -1, 		1,
-	1, 1, -1, 		1,
-	1, -1, -1, 		1,
-	-1, -1, -1, 	1,
-	-1, 1, 1, 		1,
-	1, 1, 1, 		1,
-	1, -1, 1, 		1,
-	-1, -1, 1, 		1,
-};
-
-u32 cubeEdges[CUBE_EDGE*2] = {
-	0, 1,	1, 2,	2, 3, 	3, 0,
-	4, 5,	5, 6,	6, 7,	7, 4,
-	0, 4,	1, 5,	2, 6,	3, 7,
-};
-
-u32 cubeFace[CUBE_FACE*4] = {
-	0, 1, 2, 3,
-	4, 5, 6, 7,
-	0, 4, 5, 1,
-	1, 5, 6, 2,
-	2, 6, 7, 3,
-	3, 7, 4, 0,
-};
-
-float perspectiveMatrix[4*4] = {
-	1, 0, 0, 0,
-	0, 1, 0, 0,
-	0, 0, 1, 0,
-	0, 0, 0, 1,
-};
-
+// to scale to the view model (i.e display)
 float toViewCoordsMatrixScale[4*4] = {
 	80, 0, 0, 0,
 	0, 80, 0, 0,
 	0, 0, 80, 0,
 	0, 0, 0, 1,
 }; 
-
+// to translate to the view model (i.e display) so model is the middle of the screen
 float toViewCoordsMatrixTranslate[4*4] = {
 	1, 0, 0, 0,
 	0, 1, 0, 0,
 	0, 0, 1, 0,
 	((float)APP_W/2), ((float)APP_H/2), 0, 1,
-}; 
-
-int16_t scaleVectorToDraw(float pos){
-	return (int16_t)pos;
-	// return (pos * 80) + (APP_W/2);
-}
-float unscaleVectorToDraw(int16_t pos){
-	// return ((float)pos - (float)(APP_W/2))/80.;
-	return (float)pos;
-}
+};
 
 void createTransformMatrix(float rotX, float rotY, float rotZ, float *resultMatrix){
 	float tmpA[4*4];
@@ -184,7 +153,6 @@ void drawObj(int *obj, uint *edgeToVertex, uint edgeToVertexLen, uint *faceDef, 
 	u32 color = 0xFFFFFF;
 	int tmpF;
 
-// #define DRAW_FACE
 	// face drawing function
 #ifdef DRAW_FACE
 	for(int fI=0;fI<faceDefLen;fI++){
@@ -480,7 +448,6 @@ int main(void) {
 	float rotY = 0.0;
 	float rotZ = 0.0;
 
-#define ROTATION_INCREMENT	5
 
 	while (!quit) {
 		while (SDL_PollEvent(&e)) {
