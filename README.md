@@ -4,7 +4,7 @@ This is a personal playground where I play around with 3d computer graphics.
 
 The idea is for this code to eventually make itself unto an embedded system with limited memory
 
-![DemoVideo1](.readmeImg/Screencast_20250906_224342.webm)
+![DemoVideo1](.readmeImg/readme1.gif)
 
 
 # Files:
